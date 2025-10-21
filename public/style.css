@@ -1,0 +1,22 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background: #f4f4f4;
+}
+
+form {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 300px;
+}
+
+.msg {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.msg.error { color: red; }
+.msg.success { color: green; }
+
+
