@@ -14,7 +14,7 @@ const port = process.env.PORT || 3000;
 // 📁 Archivos estáticos
 app.use('/public', express.static(path.resolve(__dirname, 'public')));
 
-// 🛡️ Seguridad con Helmet (CSP incluido)
+// 🛡️ Seguridad con Helmet
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -42,7 +42,7 @@ app.use(session({
   cookie: { secure: false } // Cambiar a true si usas HTTPS
 }));
 
-// 🔐 Middleware para rutas protegidas
+// 🔐 Middleware de autenticación
 function requireAuth(req, res, next) {
   if (!req.session.user) {
     return res.redirect('/');
@@ -77,10 +77,10 @@ app.get('/', (req, res) => {
   `);
 });
 
-// 🔐 Panel según el tipo de usuario
+// 🔐 Panel según rol
 app.get('/panel', requireAuth, (req, res) => {
-  const { username } = req.session.user;
-  const isAdmin = username === 'admin';
+  const { username, role } = req.session.user;
+  const isAdmin = role === 'admin';
 
   res.send(`
     <html>
@@ -90,6 +90,7 @@ app.get('/panel', requireAuth, (req, res) => {
       </head>
       <body>
         <h1>Bienvenido, ${username}</h1>
+        <p>Rol: ${role}</p>
         <p>Conexión exitosa ✅</p>
         <hr>
 
@@ -132,6 +133,7 @@ mongoose
     );
   })
   .catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
+
   
 
 

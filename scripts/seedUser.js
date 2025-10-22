@@ -8,8 +8,8 @@ async function seed() {
     await mongoose.connect(process.env.MONGODB_URI);
 
     const usersToSeed = [
-      { username: 'admin', password: 'password123' },
-      { username: 'user',  password: 'password456' }
+      { username: 'admin', password: 'password123', role: 'admin' },
+      { username: 'user',  password: 'password456', role: 'usuario' }
     ];
 
     for (const u of usersToSeed) {
@@ -22,19 +22,20 @@ async function seed() {
       const salt = await bcrypt.genSalt(10);
       const hashed = await bcrypt.hash(u.password, salt);
 
-      const newUser = new User({ username: u.username, password: hashed });
+      const newUser = new User({ username: u.username, password: hashed, role: u.role });
       await newUser.save();
-      console.log(`Usuario '${u.username}' creado.`);
+      console.log(`Usuario '${u.username}' (${u.role}) creado.`);
     }
 
-    console.log('Seed finalizado.');
+    console.log('✅ Seed finalizado.');
     process.exit(0);
   } catch (err) {
-    console.error('Error en seed:', err);
+    console.error('❌ Error en seed:', err);
     process.exit(1);
   }
 }
 
 seed();
+
 
 

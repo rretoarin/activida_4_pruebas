@@ -15,7 +15,8 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: '❌ Contraseña incorrecta' });
 
-    req.session.user = { username: user.username };
+    // Guardamos también el rol en la sesión
+    req.session.user = { username: user.username, role: user.role };
     return res.json({ message: '✅ Login exitoso', redirect: '/panel' });
   } catch (err) {
     console.error(err);
@@ -26,7 +27,7 @@ router.post('/login', async (req, res) => {
 // --- REGISTRO (solo admin) ---
 router.post('/register', async (req, res) => {
   try {
-    if (!req.session.user || req.session.user.username !== 'admin') {
+    if (!req.session.user || req.session.user.role !== 'admin') {
       return res.status(403).json({ message: '🚫 Solo el admin puede registrar usuarios' });
     }
 
@@ -41,10 +42,11 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashed = await bcrypt.hash(newPassword, salt);
 
-    const newUser = new User({ username: newUsername, password: hashed });
+    // Todos los nuevos usuarios creados por admin tendrán rol "usuario"
+    const newUser = new User({ username: newUsername, password: hashed, role: 'usuario' });
     await newUser.save();
 
-    res.json({ message: `✅ Usuario '${newUsername}' registrado correctamente` });
+    res.json({ message: `✅ Usuario '${newUsername}' registrado correctamente con rol 'usuario'` });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: '⚠️ Error al registrar usuario' });
@@ -64,6 +66,7 @@ router.post('/logout', (req, res) => {
 });
 
 module.exports = router;
+
 
 
 
