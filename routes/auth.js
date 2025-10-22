@@ -1,75 +1,78 @@
 const express = require('express');
-const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
 const router = express.Router();
 
-/**
- * Registro de usuario
- */
-router.post('/register', [
-  body('username').isLength({ min: 3 }).trim().escape(),
-  body('password').isLength({ min: 6 })
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).send('❌ Campos inválidos');
-  }
-
+// --- LOGIN ---
+router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    const existingUser = await User.findOne({ username }).exec();
-    if (existingUser) {
-      return res.status(400).send('❌ El usuario ya existe');
-    }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    const user = new User({ username, password: hashedPassword });
-    await user.save();
-
-    res.send('✅ Usuario registrado correctamente');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('❌ Error interno del servidor');
-  }
-});
-
-/**
- * Login seguro
- */
-router.post('/login', [
-  body('username').notEmpty().trim().escape(),
-  body('password').notEmpty()
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).send('❌ Campos incompletos');
-  }
-
-  try {
-    const { username, password } = req.body;
     const user = await User.findOne({ username }).exec();
-
-    if (!user) {
-      return res.status(401).send('❌ Usuario no encontrado');
-    }
+    if (!user) return res.status(400).json({ message: '❌ Usuario no encontrado' });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).send('❌ Contraseña errada');
-    }
+    if (!isMatch) return res.status(400).json({ message: '❌ Contraseña incorrecta' });
 
-    res.send('✅ Login exitoso');
+    req.session.user = { username: user.username };
+    return res.json({ message: '✅ Login exitoso', redirect: '/panel' });
   } catch (err) {
     console.error(err);
-    res.status(500).send('❌ Error interno del servidor');
+    res.status(500).json({ message: '⚠️ Error en el servidor' });
   }
 });
 
+// --- REGISTRO (solo admin) ---
+router.post('/register', async (req, res) => {
+  try {
+    if (!req.session.user || req.session.user.username !== 'admin') {
+      return res.status(403).json({ message: '🚫 Solo el admin puede registrar usuarios' });
+    }
+
+    const { newUsername, newPassword } = req.body;
+    if (!newUsername || !newPassword) {
+      return res.status(400).json({ message: '❗ Todos los campos son obligatorios' });
+    }
+
+    const existingUser = await User.findOne({ username: newUsername }).exec();
+    if (existingUser) return res.status(400).json({ message: '⚠️ El usuario ya existe' });
+
+    const salt = await bcrypt.genSalt(10);
+    const hashed = await bcrypt.hash(newPassword, salt);
+
+    const newUser = new User({ username: newUsername, password: hashed });
+    await newUser.save();
+
+    res.json({ message: `✅ Usuario '${newUsername}' registrado correctamente` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: '⚠️ Error al registrar usuario' });
+  }
+});
+
+// --- LOGOUT ---
+router.post('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Error al cerrar sesión:', err);
+      return res.status(500).json({ message: '⚠️ Error al cerrar sesión' });
+    }
+    res.clearCookie('connect.sid');
+    res.json({ message: '👋 Sesión cerrada correctamente', redirect: '/' });
+  });
+});
+
 module.exports = router;
-module.exports = router;
+
+
+
+
+
+
+
+
+
 
 
 

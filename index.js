@@ -4,17 +4,17 @@ const mongoose = require('mongoose');
 const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-const authRoutes = require('./routes/auth');
 const path = require('path');
 const session = require('express-session');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// ✅ Ruta estática
+// 📁 Archivos estáticos
 app.use('/public', express.static(path.resolve(__dirname, 'public')));
 
-// 🛡️ Seguridad con CSP completo
+// 🛡️ Seguridad con Helmet (CSP incluido)
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -26,25 +26,26 @@ app.use(
     }
   })
 );
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ⚙️ Rate limiting
+// ⚙️ Límite de peticiones
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 
-// 🗄️ Sesiones simples para panel
+// 🗄️ Sesiones
 app.use(session({
   secret: process.env.SESSION_SECRET || 'clave_temporal',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false } // Cambiar a true si activas HTTPS
+  cookie: { secure: false } // Cambiar a true si usas HTTPS
 }));
 
-// 🔐 Middleware de autenticación
+// 🔐 Middleware para rutas protegidas
 function requireAuth(req, res, next) {
   if (!req.session.user) {
-    return res.status(401).send('❌ Acceso no autorizado');
+    return res.redirect('/');
   }
   next();
 }
@@ -76,8 +77,11 @@ app.get('/', (req, res) => {
   `);
 });
 
-// 🔐 Panel protegido
+// 🔐 Panel según el tipo de usuario
 app.get('/panel', requireAuth, (req, res) => {
+  const { username } = req.session.user;
+  const isAdmin = username === 'admin';
+
   res.send(`
     <html>
       <head>
@@ -85,20 +89,29 @@ app.get('/panel', requireAuth, (req, res) => {
         <link rel="stylesheet" href="/public/style.css">
       </head>
       <body>
-        <h1>Bienvenido al panel</h1>
+        <h1>Bienvenido, ${username}</h1>
         <p>Conexión exitosa ✅</p>
         <hr>
-        <h2>Registrar nuevo usuario</h2>
-        <form id="registerForm">
-          <label for="newUsername">Nuevo usuario:</label>
-          <input type="text" id="newUsername" required><br><br>
 
-          <label for="newPassword">Nueva contraseña:</label>
-          <input type="password" id="newPassword" required autocomplete="new-password"><br><br>
+        ${isAdmin
+          ? `
+            <h2>Registrar nuevo usuario</h2>
+            <form id="registerForm">
+              <label for="newUsername">Nuevo usuario:</label>
+              <input type="text" id="newUsername" name="newUsername" required><br><br>
 
-          <button type="submit">Registrar</button>
-          <div class="msg"></div>
-        </form>
+              <label for="newPassword">Nueva contraseña:</label>
+              <input type="password" id="newPassword" name="newPassword" required autocomplete="new-password"><br><br>
+
+              <button type="submit">Registrar</button>
+              <div class="msg"></div>
+            </form>
+            <hr>
+          `
+          : `<p>No tienes permisos para registrar nuevos usuarios.</p><hr>`
+        }
+
+        <button id="logoutBtn">Cerrar sesión</button>
 
         <script src="/public/script.js"></script>
       </body>
@@ -109,7 +122,7 @@ app.get('/panel', requireAuth, (req, res) => {
 // 🧭 Rutas de autenticación
 app.use('/auth', authRoutes);
 
-// 🗄️ Conexión a MongoDB y servidor
+// 🗄️ Conexión a MongoDB
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
@@ -118,9 +131,12 @@ mongoose
       console.log(`🚀 Servidor corriendo en http://localhost:${port}`)
     );
   })
-  .catch((err) => {
-    console.error('❌ Error al conectar a MongoDB:', err);
-  });
+  .catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
+  
+
+
+
+
 
 
 
