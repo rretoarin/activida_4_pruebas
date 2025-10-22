@@ -1,41 +1,31 @@
-require('dotenv').config();
-const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
-async function seed() {
+async function seedUsers() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
-
-    const usersToSeed = [
-      { username: 'admin', password: 'password123', role: 'admin' },
-      { username: 'user',  password: 'password456', role: 'usuario' }
-    ];
-
-    for (const u of usersToSeed) {
-      const exists = await User.findOne({ username: u.username }).exec();
-      if (exists) {
-        console.log(`El usuario '${u.username}' ya existe — se omite.`);
-        continue;
-      }
-
-      const salt = await bcrypt.genSalt(10);
-      const hashed = await bcrypt.hash(u.password, salt);
-
-      const newUser = new User({ username: u.username, password: hashed, role: u.role });
-      await newUser.save();
-      console.log(`Usuario '${u.username}' (${u.role}) creado.`);
+    const existingAdmin = await User.findOne({ username: 'admin' });
+    if (!existingAdmin) {
+      const hashed = await bcrypt.hash('admin123', 10);
+      await User.create({
+        username: 'admin',
+        password: hashed,
+        role: 'admin'
+      });
+      console.log('✅ Usuario admin creado: admin / admin123');
+    } else {
+      console.log('ℹ️ Usuario admin ya existe');
     }
-
-    console.log('✅ Seed finalizado.');
-    process.exit(0);
-  } catch (err) {
-    console.error('❌ Error en seed:', err);
-    process.exit(1);
+  } catch (error) {
+    console.error('❌ Error al crear usuario admin:', error);
+    throw error;
   }
 }
 
-seed();
+module.exports = seedUsers;
+
+
+
+
 
 
 

@@ -4,9 +4,7 @@
   "description": "Backend seguro con MongoDB y Express",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "seed": "node scripts/seedUser.js"
+    "start": "node index.js"
   },
   "author": "Ruben Reto Panta",
   "license": "ISC",
@@ -25,3 +23,6 @@
     "nodemon": "^3.1.0"
   }
 }
+
+
+

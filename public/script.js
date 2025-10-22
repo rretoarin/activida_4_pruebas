@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
+  const logoutBtn = document.getElementById('logoutBtn');
 
-  // --- LOGIN ---
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -21,18 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const data = await res.json();
         msg.textContent = data.message;
-
-        if (res.ok && data.redirect) {
-          window.location.href = data.redirect;
-        }
+        if (res.ok && data.redirect) setTimeout(() => { window.location.href = data.redirect; }, 500);
       } catch (err) {
-        console.error('❌ Error en login:', err);
+        console.error(err);
         msg.textContent = '⚠️ Error en el servidor';
       }
     });
   }
 
-  // --- REGISTRO ---
   if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -48,30 +44,31 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ newUsername, newPassword })
         });
-
         const data = await res.json();
         msg.textContent = data.message;
+        if (res.ok) { msg.classList.add('success'); registerForm.reset(); }
+        else msg.classList.add('error');
       } catch (err) {
-        console.error('❌ Error en registro:', err);
+        console.error(err);
         msg.textContent = '⚠️ Error en el servidor';
       }
     });
   }
 
-  // --- LOGOUT ---
-  const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
       try {
         const res = await fetch('/auth/logout', { method: 'POST' });
         const data = await res.json();
         alert(data.message);
-        if (data.redirect) {
-          window.location.href = data.redirect; // ✅ Regresa al login principal
-        }
+        if (data.redirect) window.location.href = data.redirect;
       } catch (err) {
-        console.error('❌ Error al cerrar sesión:', err);
+        console.error(err);
+        alert('⚠️ No se pudo cerrar sesión');
       }
     });
   }
 });
+
+
+

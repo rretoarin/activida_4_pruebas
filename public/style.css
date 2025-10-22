@@ -1,22 +1,54 @@
-body {
-  font-family: Arial, sans-serif;
-  padding: 20px;
-  background: #f4f4f4;
-}
-
+/* Formularios */
 form {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 300px;
+  background-color: #f9f9f9; /* gris muy claro y profesional */
+  padding: 25px 30px;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1); /* sombra más suave */
+  width: 350px;
+  margin-top: 0;
+  border: 1px solid #e0e0e0; /* borde sutil */
 }
 
-.msg {
-  margin-top: 10px;
-  font-weight: bold;
+/* Inputs y selects dentro del formulario */
+form input,
+form select,
+form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff;
+  font-size: 14px;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.msg.error { color: red; }
-.msg.success { color: green; }
+form input:focus,
+form select:focus,
+form textarea:focus {
+  border-color: #007bff; /* color azul profesional al enfocar */
+  box-shadow: 0 0 5px rgba(0,123,255,0.3);
+  outline: none;
+}
+
+/* Botón del formulario */
+form button {
+  background-color: #007bff; /* azul profesional */
+  color: #fff;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+form button:hover {
+  background-color: #0056b3; /* azul más oscuro al hover */
+  transform: translateY(-1px); /* ligero efecto de elevación */
+}
+
+
+
 
 
